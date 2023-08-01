@@ -1,0 +1,99 @@
+/* 
+ * File:   main.cpp
+ * Author: martinnavarro
+ *
+ * Created on June 30, 2023, 12:41 PM
+ */
+
+//System Libraries
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <ctime>
+#include <cstdlib>
+#include <cmath>
+#include <fstream>
+
+using namespace std;
+
+int main() {
+    srand(static_cast<unsigned int>(time(0)));
+
+    int attempts = 0;
+    int wins = 0;
+    int losses = 0;
+
+    cout << "Welcome to Hangman - Animal, Fruit, and Sports Edition!" << endl;
+
+    int round = 0;
+    while (round < 3) {
+        string category;
+        string word;
+        string hiddenWord;
+        char guess;
+
+        if (round == 0) {
+            category = "animal";
+            word = "elephant";
+        } else if (round == 1) {
+            category = "fruit";
+            word = "apple";
+        } else if (round == 2) {
+            category = "sports";
+            word = "football";
+        }
+
+        hiddenWord = string(word.length(), '-');
+
+        cout << "Guess a word from the " << category << " category!" << endl;
+
+        bool guessedCorrectly = false;
+        while (attempts < 6 && !guessedCorrectly) {
+            cout << "\nCurrent word: " << hiddenWord << endl;
+
+            cout << "Enter your guess: ";
+            cin >> guess;
+
+            bool isCorrectGuess = false;
+            size_t i = 0;
+            while (i < word.length()) {
+                if (word[i] == guess) {
+                    hiddenWord[i] = guess;
+                    isCorrectGuess = true;
+                }
+                i++;
+            }
+
+            if (isCorrectGuess) {
+                if (hiddenWord == word) {
+                    cout << "Congratulations! You guessed the " << category << ": " << word << endl;
+                    ++wins;
+                    guessedCorrectly = true;
+                }
+            } else {
+                attempts++;
+            }
+        }
+
+        if (!guessedCorrectly) {
+            cout << "Game Over! The correct " << category << " was: " << word << endl;
+            ++losses;
+        }
+
+        attempts = 0;
+        round++;
+    }
+
+    int totalGames = wins + losses;
+    int percentageWins = (totalGames == 0) ? 0 : static_cast<int>((wins * 100) / totalGames);
+    int percentageLosses = (totalGames == 0) ? 0 : static_cast<int>((losses * 100) / totalGames);
+    float averageWins = static_cast<float>(wins) / totalGames * 100;
+
+    cout << "\n*** Statistics ***" << endl;
+    cout << "Total games: " << totalGames << endl;
+    cout << "Wins: " << wins << " (" << percentageWins << "%)" << endl;
+    cout << "Losses: " << losses << " (" << percentageLosses << "%)" << endl;
+    cout << "Average percentage of wins: " << fixed << setprecision(2) << averageWins << "%" << endl;
+
+    return 0;
+}
