@@ -1,0 +1,281 @@
+/* 
+ * File:   main.cpp
+ * Author: Martin Navarro
+ *
+ * Created on June 30, 2023, 12:41 PM
+ */
+#include <iostream>
+#include <string>
+#include <ctime>
+#include <cstdlib>
+#include <cmath>
+#include <iomanip>
+#include <fstream>
+
+using namespace std;
+
+// Function prototypes
+string getRandomWord(const string words[], int size);
+string getUserGuess();
+bool isGuessCorrect(const string& word, char guess);
+void updateHiddenWord(string& hiddenWord, const string& word, char guess);
+void displayHangman(int attempts);
+void displayGameStatus(const string& hiddenWord, int attempts);
+void updateLeaderboard(const string& playerName, int score, string leaderboard[][2], int size);
+void displayLeaderboard(const string leaderboard[][2], int size);
+
+// Function prototypes for additional functionalities
+bool isGameOver(int attempts);
+void sortLeaderboard(string leaderboard[][2], int size);
+void bubbleSort(int arr[], int size);
+void selectionSort(int arr[], int size);
+int linearSearch(const int arr[], int size, int key);
+int binarySearch(const int arr[], int size, int key);
+
+const int MAX_ATTEMPTS = 6;
+
+int main() {
+    srand(static_cast<unsigned int>(time(0)));
+
+    int attempts = 0;
+    int wins = 0;
+    int losses = 0;
+
+    string animalWords[] = {
+         "elephant", "tiger", "giraffe", "penguin", "koala", "dolphin",
+         "panda", "kangaroo", "lemur", "jaguar", "rhino", "hippo"
+     };
+     string fruitWords[] = {
+     "apple", "banana", "orange", "grape", "watermelon", "kiwi",
+     "mango", "berry", "pear", "pineapple", "cherry", "melon"
+     };
+     string sportsWords[] = {
+    "football", "basketball", "soccer", "baseball", "tennis", "volleyball",
+     "swimming", "hockey", "golf", "cricket", "rugby", "badminton"
+    };
+
+    const int LEADERBOARD_SIZE = 5;
+    string leaderboard[LEADERBOARD_SIZE][2] = {{"John", "5"}, {"Alice", "3"}, {"Bob", "1"}, {"Eve", "2"}, {"Dan", "4"}};
+
+     cout << "Welcome to Hangman - Animal, Fruit, and Sports Edition!" << endl;
+
+    // Play the game for all categories
+     int round = 0;
+     while (round < 3) {
+     string* currentWords;
+     string category;
+
+     if (round == 0) {
+     currentWords = animalWords;
+        category = "animal";
+        } else if (round == 1) {
+         currentWords = fruitWords;
+        category = "fruit";
+         } else if (round == 2) {
+             currentWords = sportsWords;
+         category = "sports";
+    }
+
+         string word = getRandomWord(currentWords, 12);
+        string hiddenWord(word.length(), '-');
+
+         cout << "Guess a word from the " << category << " category!" << endl;
+
+         bool guessedCorrectly = false;
+         while (!isGameOver(attempts) && !guessedCorrectly) {
+         displayGameStatus(hiddenWord, attempts);
+
+         char guess = getUserGuess()[0];
+         if (isGuessCorrect(word, guess)) {
+             updateHiddenWord(hiddenWord, word, guess);
+
+         if (hiddenWord == word) {
+         cout << "Congratulations! You guessed the " << category << ": " << word << endl;
+         ++wins;
+             guessedCorrectly = true;
+                }
+            } else {
+            attempts++;
+        }
+     }
+
+         if (!guessedCorrectly) {
+         cout << "Game Over! The correct " << category << " was: " << word << endl;
+        ++losses;
+     }
+
+     // Reset attempts for the next round
+     attempts = 0;
+     round++;
+     }
+
+     // Calculate percentages
+     int totalGames = wins + losses;
+     int percentageWins = (totalGames == 0) ? 0 : static_cast<int>((wins * 100) / totalGames);
+     int percentageLosses = (totalGames == 0) ? 0 : static_cast<int>((losses * 100) / totalGames);
+     float averageWins = static_cast<float>(wins) / totalGames * 100;
+
+     // Display statistics
+     cout << "\n*** Statistics ***" << endl;
+     cout << "Total games played: " << static_cast<unsigned int>(totalGames) << endl;
+     cout << "Number of wins: " << static_cast<unsigned int>(wins) << " (" << static_cast<unsigned int>(percentageWins) << "%)" << endl;
+     cout << "Number of losses: " << static_cast<unsigned int>(losses) << " (" << static_cast<unsigned int>(percentageLosses) << "%)" << endl;
+     cout << "Average percentage of wins: " << fixed << setprecision(2) << averageWins << "%" << endl;
+
+     // Ask the player to enter their name for the leaderboard
+     string playerName;
+     cout << "\nEnter your name to save your score in the leaderboard: ";
+     cin >> playerName;
+
+     // Update the leaderboard with the player's score
+     updateLeaderboard(playerName, percentageWins, leaderboard, LEADERBOARD_SIZE);
+
+     // Sort the leaderboard by scores in descending order
+     sortLeaderboard(leaderboard, LEADERBOARD_SIZE);
+
+     // Display the updated leaderboard
+     cout << "\n*** Updated Leaderboard ***" << endl;
+     displayLeaderboard(leaderboard, LEADERBOARD_SIZE);
+
+     return 0;
+}
+
+string getRandomWord(const string words[], int size) {
+    return words[rand() % size];
+}
+
+string getUserGuess() {
+     string guess;
+     cout << "Enter your guess: ";
+     cin >> guess;
+     return guess;
+}
+
+bool isGuessCorrect(const string& word, char guess) {
+     return word.find(guess) != string::npos;
+}
+
+void updateHiddenWord(string& hiddenWord, const string& word, char guess) {
+     for (size_t i = 0; i < word.length(); ++i) {
+     if (word[i] == guess) {
+    hiddenWord[i] = guess;
+     }
+     }
+}
+
+void displayHangman(int attempts) {
+     // Display the hangman ASCII art based on the number of attempts
+     // Omitted for brevity in this beginner-friendly version
+}
+
+void displayGameStatus(const string& hiddenWord, int attempts) {
+     cout << "\nCurrent word: " << hiddenWord << endl;
+     displayHangman(attempts);
+}
+
+void updateLeaderboard(const string& playerName, int score, string leaderboard[][2], int size) {
+     // Find the position to insert the new score in the leaderboard
+     int position = -1;
+     bool positionFound = false;
+     for (int i = 0; i < size; ++i) {
+    if (score >= stoi(leaderboard[i][1])) {
+     position = i;
+     positionFound = true;
+     // continue searching for the correct position
+     }
+     }
+
+     if (positionFound) {
+    // Shift the leaderboard entries to make space for the new score
+    for (int i = size - 1; i > position; --i) {
+     leaderboard[i][0] = leaderboard[i - 1][0];
+     leaderboard[i][1] = leaderboard[i - 1][1];
+     }
+
+     // Insert the new score at the appropriate position
+    leaderboard[position][0] = playerName;
+     leaderboard[position][1] = to_string(score);
+     }
+}
+
+void displayLeaderboard(const string leaderboard[][2], int size) {
+     cout << "Name       | Score" << endl;
+     cout << "-------------------" << endl;
+     for (int i = 0; i < size; ++i) {
+     cout << setw(10) << left << leaderboard[i][0] << "| " << leaderboard[i][1] << endl;
+     }
+}
+
+bool isGameOver(int attempts) {
+     return attempts >= MAX_ATTEMPTS;
+}
+
+void sortLeaderboard(string leaderboard[][2], int size) {
+    int scores[size];
+     for (int i = 0; i < size; ++i) {
+     scores[i] = stoi(leaderboard[i][1]);
+     }
+
+    // Bubble sort the scores in descending order
+     bubbleSort(scores, size);
+
+     // Update the leaderboard with the sorted scores
+     for (int i = 0; i < size; ++i) {
+     leaderboard[i][1] = to_string(scores[i]);
+     }
+}
+
+void bubbleSort(int arr[], int size) {
+     for (int i = 0; i < size - 1; ++i) {
+         for (int j = 0; j < size - i - 1; ++j) {
+             if (arr[j] < arr[j + 1]) {
+                 // Swap the elements
+             int temp = arr[j];
+             arr[j] = arr[j + 1];
+             arr[j + 1] = temp;
+             }
+         }
+    }
+}
+
+void selectionSort(int arr[], int size) {
+     for (int i = 0; i < size - 1; ++i) {
+     int minIndex = i;
+     for (int j = i + 1; j < size; ++j) {
+    if (arr[j] < arr[minIndex]) {
+     minIndex = j;
+     }
+     }
+     if (minIndex != i) {
+         // Swap the elements
+     int temp = arr[i];
+     arr[i] = arr[minIndex];
+     arr[minIndex] = temp;
+         }
+     }
+}
+
+int linearSearch(const int arr[], int size, int key) {
+    for (int i = 0; i < size; ++i) {
+     if (arr[i] == key) {
+     return i;
+    }
+     }
+     return 0;
+}
+
+int binarySearch(const int arr[], int size, int key) {
+     int left = 0;
+     int right = size - 1;
+     while (left <= right) {
+     int mid = (left + right) / 2;
+     if (arr[mid] == key) {
+     return mid;
+     } else if (arr[mid] < key) {
+     left = mid + 1;
+     } else {
+    right = mid - 1;
+     }
+ }
+     return 0;
+}
